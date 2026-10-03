@@ -1,0 +1,8 @@
+<fragment>
+  <!--
+    Demo 5: APIM obtiene un token de Entra ID con SU Managed Identity (sin secretos) para la
+    audiencia de la API y lo envía en Authorization. El backend cerrado
+    (Easy Auth) solo confía en APIM.
+  -->
+  <authentication-managed-identity resource="{{orders-backend-audience}}" />
+</fragment>

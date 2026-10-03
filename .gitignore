@@ -1,0 +1,66 @@
+# --- Terraform ---
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+infra/backend.tf
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+# Se versiona: .terraform.lock.hcl (fija las versiones de los providers)
+
+# --- Secretos / entorno generado por scripts/export-env.sh ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.publishsettings
+secrets.json
+
+# --- .NET ---
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.rsuser
+.vs/
+TestResults/
+*.nupkg
+publish/
+
+# --- Node / k6 ---
+node_modules/
+k6-summary*.json
+
+# --- Editores ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*~
+
+# --- Claude Code (ajustes locales) ---
+.claude/settings.local.json
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# --- Logs ---
+*.log

@@ -1,0 +1,14 @@
+# Demo 2 — Rate limiting y cuotas (API: /demo2)
+# Ejecuta la petición 2 once veces seguidas: a partir de la 11ª dentro de 60 s -> 429.
+# (Para la ráfaga automática usa demos/demo2/rate-limit.sh o demos/demo2/k6.sh.)
+
+@apim = {{$dotenv APIM_URL}}
+@key = {{$dotenv SUBSCRIPTION_KEY}}
+
+### 1) "Antes": API sin límite (/demo1), sin headers X-RateLimit
+GET {{apim}}/demo1/orders
+Ocp-Apim-Subscription-Key: {{key}}
+
+### 2) Con rate limit (/demo2): mira el header X-RateLimit-Remaining
+GET {{apim}}/demo2/orders
+Ocp-Apim-Subscription-Key: {{key}}

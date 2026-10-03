@@ -1,0 +1,13 @@
+<fragment>
+  <!--
+    Demo 2: máximo ${rate_limit_calls} llamadas cada ${rate_limit_period} s por suscripción.
+    Al excederse, APIM salta a on-error (common-on-error) con Reason = RateLimitExceeded;
+    retry-after-variable-name deja los segundos de espera para el header Retry-After.
+  -->
+  <rate-limit-by-key calls="${rate_limit_calls}"
+                     renewal-period="${rate_limit_period}"
+                     counter-key="@(context.Subscription.Id)"
+                     retry-after-variable-name="retry-after"
+                     remaining-calls-header-name="X-RateLimit-Remaining"
+                     total-calls-header-name="X-RateLimit-Limit" />
+</fragment>

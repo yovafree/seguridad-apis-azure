@@ -1,0 +1,16 @@
+# Demo 5 — Backend cerrado: solo accesible a través de APIM (API: /demo5)
+
+@apim = {{$dotenv APIM_URL}}
+@backend = {{$dotenv BACKEND_URL}}
+@backendLocked = {{$dotenv BACKEND_LOCKED_URL}}
+@key = {{$dotenv SUBSCRIPTION_KEY}}
+
+### 1) Backend abierto, directo -> 200 (se salta APIM)
+GET {{backend}}/orders
+
+### 2) Backend cerrado, directo -> 403 (restricción por IP)
+GET {{backendLocked}}/orders
+
+### 3) Backend cerrado vía APIM -> 200 (APIM usa su Managed Identity)
+GET {{apim}}/demo5/orders
+Ocp-Apim-Subscription-Key: {{key}}

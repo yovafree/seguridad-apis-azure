@@ -1,0 +1,89 @@
+<fragment>
+  <!--
+    Errores con formato ProblemDetails (RFC 9457). Se incluye en <on-error> de todas las APIs.
+    - Rate limit o cuota excedidos -> 429 + Retry-After (Demo 2)
+    - Validación de parámetros/body -> 400 (413 si el body excede el tamaño) (Demo 4)
+    - Token ausente o inválido      -> 401 + WWW-Authenticate (Demo 3)
+    Cualquier otro error conserva la respuesta por defecto de APIM.
+  -->
+  <choose>
+    <when condition="@(context.LastError.Reason == "RateLimitExceeded" || context.LastError.Reason == "QuotaExceeded")">
+      <return-response>
+        <set-status code="429" reason="Too Many Requests" />
+        <set-header name="Retry-After" exists-action="override">
+          <value>@{
+              // Rate limit: lo deja la política en la variable "retry-after".
+              if (context.Variables.ContainsKey("retry-after")) {
+                  return context.Variables["retry-after"].ToString();
+              }
+              // Cuota: el mensaje dice "Quota will be replenished in hh:mm:ss".
+              var match = System.Text.RegularExpressions.Regex.Match(context.LastError.Message ?? "", @"replenished in ([0-9\.:]+[0-9])");
+              TimeSpan wait;
+              return match.Success && TimeSpan.TryParse(match.Groups[1].Value, out wait)
+                  ? ((int)Math.Ceiling(wait.TotalSeconds)).ToString()
+                  : "3600";
+          }</value>
+        </set-header>
+        <set-header name="Content-Type" exists-action="override">
+          <value>application/problem+json</value>
+        </set-header>
+        <set-body>@{
+            var isQuota = context.LastError.Reason == "QuotaExceeded";
+            return new JObject(
+                new JProperty("type", "https://tools.ietf.org/html/rfc6585#section-4"),
+                new JProperty("title", "Too Many Requests"),
+                new JProperty("status", 429),
+                new JProperty("detail", isQuota
+                    ? "Se agotó la cuota diaria de llamadas para este cliente."
+                    : "Demasiadas solicitudes. Espera antes de reintentar (ver header Retry-After)."),
+                new JProperty("instance", context.Request.OriginalUrl.Path),
+                new JProperty("traceId", context.RequestId.ToString())
+            ).ToString();
+        }</set-body>
+      </return-response>
+    </when>
+    <when condition="@(context.LastError.Source == "validate-content" || context.LastError.Source == "validate-parameters")">
+      <return-response>
+        <set-status code="@((context.LastError.Message ?? "").Contains("exceeds") ? 413 : 400)" reason="@((context.LastError.Message ?? "").Contains("exceeds") ? "Payload Too Large" : "Bad Request")" />
+        <set-header name="Content-Type" exists-action="override">
+          <value>application/problem+json</value>
+        </set-header>
+        <set-body>@{
+            var tooLarge = (context.LastError.Message ?? "").Contains("exceeds");
+            return new JObject(
+                new JProperty("type", tooLarge
+                    ? "https://tools.ietf.org/html/rfc9110#section-15.5.14"
+                    : "https://tools.ietf.org/html/rfc9110#section-15.5.1"),
+                new JProperty("title", tooLarge ? "Payload Too Large" : "Bad Request"),
+                new JProperty("status", tooLarge ? 413 : 400),
+                new JProperty("detail", context.LastError.Message),
+                new JProperty("instance", context.Request.OriginalUrl.Path),
+                new JProperty("traceId", context.RequestId.ToString()),
+                new JProperty("rechazadoPor", "API Management (" + context.LastError.Source + ")")
+            ).ToString();
+        }</set-body>
+      </return-response>
+    </when>
+    <when condition="@(context.LastError.Source == "validate-azure-ad-token" || context.LastError.Source == "validate-jwt")">
+      <return-response>
+        <set-status code="401" reason="Unauthorized" />
+        <set-header name="WWW-Authenticate" exists-action="override">
+          <value>Bearer error="invalid_token"</value>
+        </set-header>
+        <set-header name="Content-Type" exists-action="override">
+          <value>application/problem+json</value>
+        </set-header>
+        <set-body>@{
+            return new JObject(
+                new JProperty("type", "https://tools.ietf.org/html/rfc9110#section-15.5.2"),
+                new JProperty("title", "Unauthorized"),
+                new JProperty("status", 401),
+                new JProperty("detail", context.LastError.Message),
+                new JProperty("instance", context.Request.OriginalUrl.Path),
+                new JProperty("traceId", context.RequestId.ToString())
+            ).ToString();
+        }</set-body>
+      </return-response>
+    </when>
+  </choose>
+</fragment>

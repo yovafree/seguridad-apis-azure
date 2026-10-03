@@ -1,0 +1,25 @@
+<policies>
+  <!--
+    ${demo} (generada por Terraform con templatefile).
+    Cada demo es una API distinta con sus fragments ya incluidos (infra/policies/*.xml).
+  -->
+  <inbound>
+    <base />
+%{ for fragment in inbound ~}
+    <include-fragment fragment-id="${fragment}" />
+%{ endfor ~}
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+%{ for fragment in outbound ~}
+    <include-fragment fragment-id="${fragment}" />
+%{ endfor ~}
+  </outbound>
+  <on-error>
+    <base />
+    <include-fragment fragment-id="common-on-error" />
+  </on-error>
+</policies>

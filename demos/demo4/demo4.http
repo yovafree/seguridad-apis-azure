@@ -1,0 +1,40 @@
+# Demo 4 — Validación y transformación (API: /demo4)
+# Cada caso se envía a /demo1 (sin validación) y a /demo4 (con validación) para comparar.
+
+@apim = {{$dotenv APIM_URL}}
+@key = {{$dotenv SUBSCRIPTION_KEY}}
+
+########## A) Headers: Server / X-Powered-By / X-AspNet-Version ##########
+
+### A1) /demo1: expone la tecnología del backend
+GET {{apim}}/demo1/orders
+Ocp-Apim-Subscription-Key: {{key}}
+
+### A2) /demo4: headers eliminados
+GET {{apim}}/demo4/orders
+Ocp-Apim-Subscription-Key: {{key}}
+
+########## B) Campo extra ##########
+
+### B1) /demo1 -> 201: acepta "isAdmin" sin quejarse
+POST {{apim}}/demo1/orders
+Ocp-Apim-Subscription-Key: {{key}}
+Content-Type: application/json
+
+{ "customerId": "cliente-300", "product": "Silla", "quantity": 1, "unitPrice": 120.00, "isAdmin": true }
+
+### B2) /demo4 -> 400 (allow-additional-properties=false)
+POST {{apim}}/demo4/orders
+Ocp-Apim-Subscription-Key: {{key}}
+Content-Type: application/json
+
+{ "customerId": "cliente-300", "product": "Silla", "quantity": 1, "unitPrice": 120.00, "isAdmin": true }
+
+########## C) Fuera de rango ##########
+
+### C) /demo4 -> 400 (quantity 1-100)
+POST {{apim}}/demo4/orders
+Ocp-Apim-Subscription-Key: {{key}}
+Content-Type: application/json
+
+{ "customerId": "cliente-300", "product": "Silla", "quantity": 500, "unitPrice": 120.00 }

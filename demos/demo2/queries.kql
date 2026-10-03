@@ -1,0 +1,30 @@
+// Demo 2 — Consultas KQL en Log Analytics (tabla ApiManagementGatewayLogs).
+// Portal: Log Analytics workspace "<prefijo>-log" -> Logs. O con demos/demo2/kql.sh.
+// Nota: la ingesta tarda ~2-5 minutos; ejecuta la carga antes de mostrar las consultas.
+
+// 1) Llamadas por minuto: aceptadas vs. limitadas (429)
+ApiManagementGatewayLogs
+| where TimeGenerated > ago(30m)
+| where ApiId == "orders-demo2"
+| summarize total = count(), limitadas = countif(ResponseCode == 429) by bin(TimeGenerated, 1m)
+| order by TimeGenerated asc
+| render columnchart
+
+// 2) Detalle de los 429: quién, qué operación y si llegó al backend (no debería)
+ApiManagementGatewayLogs
+| where TimeGenerated > ago(30m)
+| where ResponseCode == 429
+| project TimeGenerated, ApimSubscriptionId, OperationId, CallerIpAddress, BackendResponseCode, LastErrorReason, LastErrorMessage
+| order by TimeGenerated desc
+| take 20
+
+// 3) Distribución de códigos por suscripción
+ApiManagementGatewayLogs
+| where TimeGenerated > ago(1h)
+| summarize llamadas = count() by ApimSubscriptionId, ResponseCode
+| order by ApimSubscriptionId, ResponseCode asc
+
+// 4) (Application Insights) requests con 429 vistos desde el logger de APIM
+// requests
+// | where timestamp > ago(30m) and resultCode == "429"
+// | summarize count() by bin(timestamp, 1m)

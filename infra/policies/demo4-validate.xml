@@ -1,0 +1,24 @@
+<fragment>
+  <!--
+    Demo 4: el request se valida contra el esquema OpenAPI importado ANTES de llegar al backend.
+    - validate-parameters: tipos de path/query (p. ej. /orders/abc) y query params no declarados.
+      Los headers no declarados se ignoran (Authorization, subscription key, User-Agent...).
+    - validate-content: tamaño máximo (${max_payload_bytes} bytes), tipos, minimum/maximum
+      (quantity 1-100) y propiedades extra (allow-additional-properties="false").
+  -->
+  <validate-parameters specified-parameter-action="prevent"
+                       unspecified-parameter-action="prevent"
+                       errors-variable-name="parameterErrors">
+    <headers specified-parameter-action="prevent" unspecified-parameter-action="ignore" />
+  </validate-parameters>
+  <choose>
+    <when condition="@(context.Request.Method == "POST")">
+      <validate-content unspecified-content-type-action="prevent"
+                        max-size="${max_payload_bytes}"
+                        size-exceeded-action="prevent"
+                        errors-variable-name="bodyErrors">
+        <content type="application/json" validate-as="json" action="prevent" allow-additional-properties="false" />
+      </validate-content>
+    </when>
+  </choose>
+</fragment>

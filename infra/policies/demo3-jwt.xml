@@ -1,0 +1,43 @@
+<fragment>
+  <!--
+    Demo 3: autenticación con Microsoft Entra ID.
+    validate-azure-ad-token valida firma, emisor (tenant) y audiencia -> si falla: 401.
+    El tenant y la audiencia llegan como named values (los crea Terraform).
+  -->
+  <validate-azure-ad-token tenant-id="{{orders-tenant-id}}"
+                           header-name="Authorization"
+                           failed-validation-httpcode="401"
+                           output-token-variable-name="jwt">
+    <audiences>
+      <audience>{{orders-api-audience}}</audience>
+      <audience>{{orders-api-app-id-uri}}</audience>
+    </audiences>
+  </validate-azure-ad-token>
+
+  <!-- Autorización: la operación declara "required-role"; si el token no lo trae -> 403. -->
+  <choose>
+    <when condition="@{
+        var required = context.Variables.GetValueOrDefault<string>("required-role", null);
+        if (required == null) { return false; }
+        var roles = ((Jwt)context.Variables["jwt"]).Claims.GetValueOrDefault("roles", "");
+        return !roles.Split(',').Contains(required);
+    }">
+      <return-response>
+        <set-status code="403" reason="Forbidden" />
+        <set-header name="Content-Type" exists-action="override">
+          <value>application/problem+json</value>
+        </set-header>
+        <set-body>@{
+            return new JObject(
+                new JProperty("type", "https://tools.ietf.org/html/rfc9110#section-15.5.4"),
+                new JProperty("title", "Forbidden"),
+                new JProperty("status", 403),
+                new JProperty("detail", "El token no incluye el rol requerido: " + context.Variables.GetValueOrDefault<string>("required-role", "")),
+                new JProperty("instance", context.Request.OriginalUrl.Path),
+                new JProperty("traceId", context.RequestId.ToString())
+            ).ToString();
+        }</set-body>
+      </return-response>
+    </when>
+  </choose>
+</fragment>

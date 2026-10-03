@@ -1,0 +1,10 @@
+<fragment>
+  <!--
+    Demo 2: cuota de ${quota_calls} llamadas cada ${quota_period} s por suscripción.
+    Por defecto APIM responde 403 al agotar la cuota; common-on-error la convierte en 429.
+    Va después del rate limit: las llamadas ya rechazadas por rate limit no consumen cuota.
+  -->
+  <quota-by-key calls="${quota_calls}"
+                renewal-period="${quota_period}"
+                counter-key="@("quota-" + context.Subscription.Id)" />
+</fragment>

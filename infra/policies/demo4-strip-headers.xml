@@ -1,0 +1,6 @@
+<fragment>
+  <!-- Demo 4 (outbound): no revelar la tecnología del backend al cliente. -->
+  <set-header name="Server" exists-action="delete" />
+  <set-header name="X-Powered-By" exists-action="delete" />
+  <set-header name="X-AspNet-Version" exists-action="delete" />
+</fragment>

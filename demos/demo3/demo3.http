@@ -1,0 +1,32 @@
+# Demo 3 — Autenticación JWT con Entra ID (API: /demo3)
+# Los tokens vienen de .env (scripts/export-env.sh) y duran ~60-90 min.
+
+@apim = {{$dotenv APIM_URL}}
+@key = {{$dotenv SUBSCRIPTION_KEY}}
+@tokenFull = {{$dotenv TOKEN_FULL}}
+@tokenReader = {{$dotenv TOKEN_READER}}
+
+### 1) Sin token -> 401
+GET {{apim}}/demo3/orders
+Ocp-Apim-Subscription-Key: {{key}}
+
+### 2) Cliente reader (Orders.Read) lee -> 200
+GET {{apim}}/demo3/orders
+Ocp-Apim-Subscription-Key: {{key}}
+Authorization: Bearer {{tokenReader}}
+
+### 3) Cliente reader intenta crear (requiere Orders.Write) -> 403
+POST {{apim}}/demo3/orders
+Ocp-Apim-Subscription-Key: {{key}}
+Authorization: Bearer {{tokenReader}}
+Content-Type: application/json
+
+{ "customerId": "cliente-200", "product": "Webcam", "quantity": 1, "unitPrice": 45.00 }
+
+### 4) Cliente full (Orders.Write) crea -> 201
+POST {{apim}}/demo3/orders
+Ocp-Apim-Subscription-Key: {{key}}
+Authorization: Bearer {{tokenFull}}
+Content-Type: application/json
+
+{ "customerId": "cliente-200", "product": "Webcam", "quantity": 1, "unitPrice": 45.00 }

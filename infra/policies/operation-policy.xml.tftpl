@@ -1,0 +1,19 @@
+<policies>
+  <!--
+    Política por operación: declara el rol de Entra ID que exige esta operación.
+    Solo en la API de la Demo 3. Va ANTES de <base /> para que el fragment demo3-jwt la lea.
+  -->
+  <inbound>
+    <set-variable name="required-role" value="${required_role}" />
+    <base />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

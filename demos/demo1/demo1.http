@@ -1,0 +1,16 @@
+# Demo 1 — Publicar la API en APIM (API: /demo1, solo subscription key)
+# Requiere la extensión REST Client y el .env de esta carpeta (scripts/export-env.sh).
+
+@apim = {{$dotenv APIM_URL}}
+@backend = {{$dotenv BACKEND_URL}}
+@key = {{$dotenv SUBSCRIPTION_KEY}}
+
+### 1) Backend directo: responde a cualquiera -> 200
+GET {{backend}}/orders
+
+### 2) Vía APIM sin subscription key -> 401
+GET {{apim}}/demo1/orders
+
+### 3) Vía APIM con subscription key -> 200
+GET {{apim}}/demo1/orders
+Ocp-Apim-Subscription-Key: {{key}}

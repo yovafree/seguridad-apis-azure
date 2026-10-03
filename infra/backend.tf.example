@@ -1,0 +1,26 @@
+# Backend remoto opcional en Azure Storage (RECOMENDADO si compartes el estado o lo
+# guardas fuera de tu equipo: el estado contiene los client secrets de Entra ID y la
+# subscription key de APIM).
+#
+# Uso:
+#   1. Crea la cuenta de almacenamiento (una sola vez):
+#        az group create -n tfstate-rg -l eastus2
+#        az storage account create -n <cuenta> -g tfstate-rg --sku Standard_LRS \
+#          --min-tls-version TLS1_2 --allow-blob-public-access false
+#        az storage container create -n tfstate --account-name <cuenta> --auth-mode login
+#        # Tu usuario necesita el rol "Storage Blob Data Contributor" sobre la cuenta.
+#   2. Copia este archivo como backend.tf y ajusta los valores.
+#   3. terraform init -migrate-state
+#
+# El estado queda cifrado en reposo, con acceso por Entra ID (sin access keys) y
+# con bloqueo (lease) para evitar applies concurrentes.
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "<cuenta>"
+    container_name       = "tfstate"
+    key                  = "seguridad-apis-azure.tfstate"
+    use_azuread_auth     = true
+  }
+}
